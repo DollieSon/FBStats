@@ -1,13 +1,23 @@
 import os
 import json
+import random
+import re
 PATH = "C:\\Users\\ray anthony\\Downloads\\FB Something\\FB Something\\your_facebook_activity\\messages\\inbox\\"
 PERSON_NAME = "Ray Anthony Dollison"
-
+BANNED_REGEX = [
+    re.compile("(voted for)"),
+    re.compile("(sent a link)"),
+    re.compile("(set his own nickanme to)"),
+    re.compile("(this poll is no longer available)"),
+    re.compile(r"((\w+) )?[Rr]eacted (\\(\w{5})){4} to your message"),
+]
 BANNED_SUBSTR = [
     "voted for",
     "sent an attachment",
     "sent a link"
 ]
+
+
 
 def list_files(directory):
     file_list = []
@@ -27,6 +37,10 @@ def get_messages(messages,container,PathName):
     for message in messages :
         if 'content' not in message.keys():
             continue
+        for regex in BANNED_REGEX:
+            if regex.match(message['content']) != None:
+                print(message['content'])
+                continue
         sender_name = message['sender_name']
         if sender_name not in container.keys():
             container[sender_name] = {}
@@ -46,6 +60,7 @@ people = {
 
 }
 """
+print("found :" +str(len(files))+" files")
 for  file in files:
     # print(file)
     if file.endswith(".json"):
@@ -53,7 +68,7 @@ for  file in files:
         Suffix = NameTemp.split("_")[-1]
         # print("Suffix : ", Suffix)
         ChatName = NameTemp.removesuffix("_"+Suffix)
-        print(ChatName)
+        # print(ChatName)
         with open(file,'r') as jason:
             data = json.load(jason)
             #Count the people if 2 then 1v1 else GC
@@ -65,9 +80,18 @@ for  file in files:
             filtered = get_messages(data['messages'],people,ChatName)
             # insert to people
 
+BANNED_CHAR =  ["\\","/","*","?","<",">",":","|"]
 
-with open("Saved.json","w") as outfile:
-    json.dump(people,outfile)
+def safe_name(name) -> str:
+    for char in BANNED_CHAR:
+        if char in name:
+            return name.split(char)[0] + str(random.randint(0,100))
+    return name
+print("saving...")
+for filename in people.keys():
+    # print(filename)
+    with open("./Saved_Names/"+safe_name(filename)+".json","w") as outfile:
+        json.dump(people[filename],outfile)
             # need to insert person
             # print(data['participants'])
             # for message in messages:
