@@ -5,17 +5,16 @@ import re
 PATH = "C:\\Users\\ray anthony\\Downloads\\FB Something\\FB Something\\your_facebook_activity\\messages\\inbox\\"
 PERSON_NAME = "Ray Anthony Dollison"
 BANNED_REGEX = [
-    re.compile("(voted for)"),
-    re.compile("(sent a link)"),
-    re.compile("(set his own nickanme to)"),
-    re.compile("(this poll is no longer available)"),
-    re.compile(r"((\w+) )?[Rr]eacted (\\(\w{5})){4} to your message"),
+    r"((.* )?[rR]eacted .+ to your message)",
+    r"this poll is no longer available",
+    r".* left the group",
+    r".* pinned a message",
+    r".* sent an attachment",
+    r".* send a live location",
+    r".* added .* to the group",
+    r".* set .* nickname to .*"
 ]
-BANNED_SUBSTR = [
-    "voted for",
-    "sent an attachment",
-    "sent a link"
-]
+
 
 
 
@@ -38,7 +37,7 @@ def get_messages(messages,container,PathName):
         if 'content' not in message.keys():
             continue
         for regex in BANNED_REGEX:
-            if regex.match(message['content']) != None:
+            if re.match(regex,message['content']):
                 print(message['content'])
                 continue
         sender_name = message['sender_name']
@@ -50,7 +49,7 @@ def get_messages(messages,container,PathName):
         content = message['content']
         container[sender_name][PathName][time] = content
 
-# Example usage:
+#Parsing FIles
 files = list_files(PATH)
 people = {
 
@@ -71,22 +70,17 @@ for  file in files:
         # print(ChatName)
         with open(file,'r') as jason:
             data = json.load(jason)
-            #Count the people if 2 then 1v1 else GC
-            # if len(data['participants']) == 2: # Normal Convo
-            #     for name in data['participants']:
-            #         if name != PERSON_NAME:
-            #             ChatName = name
-            #             break
             filtered = get_messages(data['messages'],people,ChatName)
-            # insert to people
+
 
 BANNED_CHAR =  ["\\","/","*","?","<",">",":","|"]
-
 def safe_name(name) -> str:
     for char in BANNED_CHAR:
         if char in name:
             return name.split(char)[0] + str(random.randint(0,100))
     return name
+
+#File Saving 
 print("saving...")
 for filename in people.keys():
     # print(filename)
